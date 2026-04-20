@@ -1,10 +1,7 @@
-# =========================================================
-# FINAL MULTI-PANEL BAR GRAPH
-# LEGEND IN BOTTOM-RIGHT EMPTY AREA
-# =========================================================
+getwd()
 
 # -------------------------------
-# 1. INSTALL PACKAGES (RUN ONCE)
+# 1. INSTALL PACKAGES 
 # -------------------------------
 install.packages(c("readxl", "dplyr", "tidyr", "ggplot2", "stringr", "patchwork", "cowplot"))
 
@@ -65,7 +62,7 @@ data_long <- data %>%
   )
 
 # -------------------------------
-# 8. EXTRACT MEAN AND SD
+# 8. EXTRACT MEAN +_ SD
 # -------------------------------
 data_long <- data_long %>%
   mutate(
@@ -246,22 +243,16 @@ legend_panel <- patchwork::wrap_elements(legend_grob)
 
 # -------------------------------
 # 20. FINAL LAYOUT
-# left column: 6 plots
-# right column: 5 plots + legend
 # -------------------------------
 left_col  <- p1 / p3 / p5 / p7 / p9 / p11
 right_col <- p2 / p4 / p6 / p8 / p10 / legend_panel
 
 final_plot <- left_col | right_col
 
-# -------------------------------
-# 21. SHOW FINAL PLOT
-# -------------------------------
+
 print(final_plot)
 
-# -------------------------------
-# 22. SAVE FIGURE
-# -------------------------------
+
 ggsave(
   "Final_multipanel_plot_with_legend_bottom_right.tiff",
   plot = final_plot,

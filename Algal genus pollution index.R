@@ -4,12 +4,7 @@ getwd()
 # ============================================================
 # PALMER INDEX: SITE-WISE ONLY (IGNORE SEASONS)
 # CH (Chauras) vs TI (Tilani)
-# + JOURNAL-STYLE TABLES
-# + SITE-WISE BAR GRAPH WITH POINTS
-# + GROUPED BAR PLOT BY GENUS
 # ============================================================
-
-getwd()
 
 library(readxl)
 library(dplyr)
@@ -21,7 +16,7 @@ library(writexl)
 # ============================================================
 # 1. READ DATA
 # ============================================================
-raw_data <- read_excel("+ and - species.xlsx", sheet = 1)
+raw_data <- read_excel("+ and - species.xlsx", sheet = 1)  #change the file directory with your file
 
 # ============================================================
 # 2. DEFINE COLUMN NAMES
@@ -30,7 +25,7 @@ species_col <- "Species Name"
 group_cols  <- c("CH J-M", "TI J-M", "CH A-J", "TI A-J")
 
 # ============================================================
-# 3. PALMER GENUS SCORES
+# 3. PALMER GENUS SCORES DATA
 # ============================================================
 palmer_genus_scores <- data.frame(
   Genus = c(
@@ -53,7 +48,7 @@ data_use <- raw_data %>%
   select(all_of(species_col), all_of(group_cols))
 
 # ============================================================
-# 5. CONVERT + / - TO 1 / 0
+# 5. CONVERT + / - TO 1 / 0 for presence and absent of genus 
 # ============================================================
 data_numeric <- data_use %>%
   mutate(
@@ -219,8 +214,6 @@ ggsave(
 
 # ============================================================
 # 16. PREPARE DATA FOR SPECIES/GENUS-WISE GROUPED BAR PLOT
-#     COMBINING BOTH SEASONS WITHIN EACH SITE
-#     REMOVE GENERA ABSENT IN BOTH SITES
 # ============================================================
 plot_data_site <- present_palmer %>%
   group_by(Site, Genus) %>%
@@ -338,8 +331,7 @@ ggsave(
 )
 
 # ============================================================
-# 18. JOURNAL-STYLE PALMER TABLES FOR CH AND TI
-#     ONLY PRESENT GENERA
+# 18. PALMER TABLES FOR CH AND TI ONLY PRESENT GENERA
 # ============================================================
 
 # genus presence by four seasonal columns
@@ -352,11 +344,10 @@ genus_presence <- long_data %>%
     values_fill = 0
   )
 
-# join Palmer score
 palmer_table_data <- genus_presence %>%
   left_join(palmer_genus_scores, by = "Genus")
 
-# function to create site-specific journal table
+
 create_palmer_table <- function(data, col1, col2){
   
   df <- data %>%
@@ -388,7 +379,6 @@ create_palmer_table <- function(data, col1, col2){
   bind_rows(df, total_row)
 }
 
-# create CH and TI tables
 ch_table <- create_palmer_table(palmer_table_data, "CH J-M", "CH A-J")
 ti_table <- create_palmer_table(palmer_table_data, "TI J-M", "TI A-J")
 

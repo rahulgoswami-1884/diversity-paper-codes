@@ -1,9 +1,8 @@
 getwd()
 
-# ============================================================
-# COMPLETE CCA + NATURE-STYLE TABLE 3 CODE
-# FOR ALL 5 ENVIRONMENTAL GROUPS
-# ============================================================
+# ========================================================================
+# CCA plot analysis with already calculated mean of species and parameters
+# ========================================================================
 
 # -----------------------------
 # PACKAGES
@@ -12,28 +11,22 @@ library(readxl)
 library(dplyr)
 library(vegan)
 
-#install.packages("openxlsx")
+#install.packages("openxlsx")   #try to install all pacakages
 library(openxlsx)
 
 # -----------------------------
 # INPUT FILES
 # -----------------------------
-file_abund <- "Species Data.xlsx"
+file_abund <- "Species Data.xlsx"  #try your file location for best result 
 file_env   <- "env data.xlsx"
 
 # ============================================================
 # READ ABUNDANCE DATA
 # ============================================================
 abund <- read_excel(file_abund)
-
-# rename first two columns
 names(abund)[1:2] <- c("Site", "Season")
-
-# create sample name
 abund <- abund %>%
   mutate(Sample = paste(Site, Season, sep = "_"))
-
-# species columns
 sp_cols <- setdiff(names(abund), c("Site", "Season", "Sample"))
 
 # convert species data to numeric
@@ -54,8 +47,7 @@ rownames(comm) <- comm$Sample
 comm$Sample <- NULL
 comm <- as.matrix(comm)
 
-# remove zero-sum species
-comm <- comm[, colSums(comm) > 0, drop = FALSE]
+comm <- comm[, colSums(comm) > 0, drop = FALSE]   # remove zero-sum species
 
 # metadata
 meta <- abund %>%
@@ -84,7 +76,7 @@ env_keep <- c(
 # check missing columns
 miss_env <- setdiff(env_keep, names(env))
 if (length(miss_env) > 0) {
-  stop(paste("❌ Missing env columns:", paste(miss_env, collapse = ", ")))
+  stop(paste("Missing env columns:", paste(miss_env, collapse = ", ")))
 }
 
 # build environmental matrix
@@ -125,7 +117,7 @@ env_mat <- env_mat[, keep_cols, drop = FALSE]
 common <- intersect(rownames(comm), rownames(env_mat))
 
 if (length(common) < 3) {
-  stop("❌ Need >= 3 matched samples.")
+  stop("Need >= 3 matched samples.")
 }
 
 comm <- comm[common, , drop = FALSE]
@@ -156,14 +148,12 @@ group_titles <- c(
 # ============================================================
 run_cca_group <- function(comm, env_mat, vars) {
   
-  # check variables exist
-  miss <- setdiff(vars, colnames(env_mat))
+    miss <- setdiff(vars, colnames(env_mat))
   if (length(miss) > 0) {
-    stop(paste("❌ Missing env vars:", paste(miss, collapse = ", ")))
+    stop(paste("Missing env vars:", paste(miss, collapse = ", ")))
   }
   
-  # standardize selected env variables
-  env_g <- as.data.frame(scale(env_mat[, vars, drop = FALSE]))
+    env_g <- as.data.frame(scale(env_mat[, vars, drop = FALSE]))
   
   # run cca
   mod <- cca(comm ~ ., data = env_g)
@@ -176,10 +166,8 @@ run_cca_group <- function(comm, env_mat, vars) {
 # ============================================================
 make_nature_table <- function(mod, group_name, axes = 4) {
   
-  # all eigenvalues
   eig_vals <- as.numeric(eigenvals(mod))
   
-  # total inertia
   total_inertia <- sum(eig_vals, na.rm = TRUE)
   
   # constrained eigenvalues
@@ -205,8 +193,7 @@ make_nature_table <- function(mod, group_name, axes = 4) {
     numeric(0)
   }
   
-  # helper to pad values to fixed axis length
-  pad_vals <- function(x, digits = 3, n = axes) {
+   pad_vals <- function(x, digits = 3, n = axes) {
     x <- round(x, digits)
     x <- as.character(x)
     if (length(x) < n) x <- c(x, rep("", n - length(x)))
@@ -369,27 +356,21 @@ left_style <- createStyle(
 write_group_sheet <- function(wb, sheet_name, tab_obj) {
   addWorksheet(wb, sheet_name)
   
-  # title
   writeData(wb, sheet = sheet_name, x = tab_obj$title, startRow = 1, startCol = 1)
   mergeCells(wb, sheet = sheet_name, cols = 1:6, rows = 1)
   addStyle(wb, sheet = sheet_name, style = title_style, rows = 1, cols = 1:6, gridExpand = TRUE)
   
-  # table
   writeData(wb, sheet = sheet_name, x = tab_obj$table, startRow = 3, startCol = 1, colNames = TRUE)
   
-  # header
   addStyle(wb, sheet = sheet_name, style = header_style, rows = 3, cols = 1:6, gridExpand = TRUE)
   
-  # body
   addStyle(wb, sheet = sheet_name, style = body_style, rows = 4:(nrow(tab_obj$table) + 3), cols = 2:6, gridExpand = TRUE)
   addStyle(wb, sheet = sheet_name, style = left_style, rows = 4:(nrow(tab_obj$table) + 3), cols = 1, gridExpand = TRUE)
   
-  # widths
   setColWidths(wb, sheet = sheet_name, cols = 1, widths = 52)
   setColWidths(wb, sheet = sheet_name, cols = 2:5, widths = 12)
   setColWidths(wb, sheet = sheet_name, cols = 6, widths = 16)
   
-  # row heights
   setRowHeights(wb, sheet = sheet_name, rows = 1, heights = 22)
   setRowHeights(wb, sheet = sheet_name, rows = 3:(nrow(tab_obj$table) + 3), heights = 20)
 }
