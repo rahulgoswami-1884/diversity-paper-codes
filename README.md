@@ -12,6 +12,8 @@ This repository contains R scripts and algal genus pollution index (Palmer index
 
 \- Diversity indices
 
+\-Similarity triangular heatmap (Jaccard similarity index) with NDMS calculation
+
 \- CCA analysis
 
 \- Graph generation
